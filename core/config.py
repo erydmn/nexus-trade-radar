@@ -32,12 +32,12 @@ class Settings(BaseSettings):
     )
 
     # ── Haber / İçerik API'leri ─────────────────────────────────────────────
-    newsapi_key: Optional[SecretStr] = Field(default=None, description="NewsAPI.org gizli anahtarı")
-    eventregistry_api_key: Optional[SecretStr] = Field(default=None, description="EventRegistry gizli anahtarı")
-    the_guardian_api_key: Optional[SecretStr] = Field(default=None, description="The Guardian Open Platform anahtarı")
-    gnews_api_key: Optional[SecretStr] = Field(default=None, description="GNews API anahtarı (isteğe bağlı)")
-    currents_api_key: Optional[SecretStr] = Field(default=None, description="Currents API anahtarı (isteğe bağlı)")
-    mediastack_api_key: Optional[SecretStr] = Field(default=None, description="Mediastack API anahtarı (isteğe bağlı)")
+    newsapi_key: Optional[SecretStr] = None
+    eventregistry_api_key: Optional[SecretStr] = None
+    the_guardian_api_key: Optional[SecretStr] = None
+    gnews_api_key: Optional[SecretStr] = None
+    currents_api_key: Optional[SecretStr] = None
+    mediastack_api_key: Optional[SecretStr] = None
 
     # GDELT sabit bir URL'dir, API anahtarı gerektirmez
     gdelt_api_url: AnyHttpUrl = Field(
@@ -46,44 +46,42 @@ class Settings(BaseSettings):
     )
 
     # ── Resmi / Kurumsal Kaynaklar ───────────────────────────────────────────
-    companies_house_api_key: Optional[SecretStr] = Field(default=None)
-    serpapi_key: Optional[SecretStr] = Field(default=None)
+    companies_house_api_key: Optional[SecretStr] = None
+    serpapi_key: Optional[SecretStr] = None
 
     # ── Makro Ticaret (UN Comtrade) ──────────────────────────────────────────
-    comtrade_api_key_primary: Optional[SecretStr] = Field(default=None, description="Birincil Comtrade API anahtarı")
-    comtrade_api_key_secondary: Optional[SecretStr] = Field(
-        default=None, description="Yedek Comtrade API anahtarı (rate-limit aşımında devreye girer)"
-    )
+    comtrade_api_key_primary: Optional[SecretStr] = None
+    comtrade_api_key_secondary: Optional[SecretStr] = None
 
     # ── Lojistik / AIS / Uçuş ───────────────────────────────────────────────
-    aisstream_api_key: Optional[SecretStr] = Field(default=None, description="AISStream.io WebSocket API anahtarı")
+    aisstream_api_key: Optional[SecretStr] = None
 
     # OpenSky: OAuth2 client credentials
-    opensky_client_id: Optional[str] = Field(default=None)
-    opensky_client_secret: Optional[SecretStr] = Field(default=None)
-    opensky_username: Optional[str] = Field(default=None)
-    opensky_password: Optional[SecretStr] = Field(default=None)
+    opensky_client_id: Optional[str] = None
+    opensky_client_secret: Optional[SecretStr] = None
+    opensky_username: Optional[str] = None
+    opensky_password: Optional[SecretStr] = None
 
     # Global Fishing Watch
     gfw_base_url: AnyHttpUrl = Field(
         default="https://gateway.api.globalfishingwatch.org",
         description="GFW API temel URL'si",
     )
-    gfw_api_token: Optional[SecretStr] = Field(default=None, description="GFW Bearer token")
+    gfw_api_token: Optional[SecretStr] = None
 
     # AviationStack
-    aviationstack_api_key: Optional[SecretStr] = Field(default=None, description="AviationStack API anahtarı")
+    aviationstack_api_key: Optional[SecretStr] = None
 
     # ── Google OAuth2 (Media) ────────────────────────────────────────────────
-    google_client_id: Optional[str] = Field(default=None)
-    google_client_secret: Optional[SecretStr] = Field(default=None)
+    google_client_id: Optional[str] = None
+    google_client_secret: Optional[SecretStr] = None
 
     # ── Yapay Zeka / LLM ────────────────────────────────────────────────────
-    groq_api_key: Optional[SecretStr] = Field(default=None, description="Groq Llama 3 API anahtarı")
+    groq_api_key: Optional[SecretStr] = None
 
     # ── Veritabanı (Supabase) ────────────────────────────────────────────────
-    supabase_url: Optional[str] = Field(default=None, description="Supabase API URL")
-    supabase_key: Optional[SecretStr] = Field(default=None, description="Supabase API Key")
+    supabase_url: Optional[str] = None
+    supabase_key: Optional[SecretStr] = None
 
     # ── Uygulama Genel ──────────────────────────────────────────────────────
     data_lake_path: str = Field(
