@@ -1,0 +1,30 @@
+Scraping BBC Business Haberleri as type 'rss' from https://feeds.bbci.co.uk/news/business/rss.xml...
+{
+  "source": "BBC Business Haberleri",
+  "raw_text": "UK inflation rate remained at 3% in February\nThe speed of price rises in the UK has stayed the same, according to data which was collected before the US-Israel war with Ir",
+  "timestamp": "2026-03-25T07:42:44.638564+00:00",
+  "metadata": {
+    "link": "https://www.bbc.com/news/articles/c9wqrdkx8ppo?at_medium=RSS&at_campaign=rss",
+    "type": "rss"
+  }
+}
+{
+  "source": "BBC Business Haberleri",
+  "raw_text": "Warning oil rise to $150 could trigger global recession\nLarry Fink says if oil prices stay high for a sustained period it will have \"profound implications\" for the world economy.",
+  "timestamp": "2026-03-25T07:42:44.671569+00:00",
+  "metadata": {
+    "link": "https://www.bbc.com/news/articles/c0j4yyl03veo?at_medium=RSS&at_campaign=rss",
+    "type": "rss"
+  }
+}
+
+Scraping Gerçek Example Sitesi as type 'html' from https://example.com/...
+{
+  "source": "Gerçek Example Sitesi",
+  "raw_text": "Example Domain",
+  "timestamp": "2026-03-25T07:42:44.756611+00:00",
+  "metadata": {
+    "url": "https://example.com/",
+    "type": "html"
+  }
+}

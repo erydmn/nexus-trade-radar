@@ -1,0 +1,14 @@
+Orchestrator starting all scrapers concurrently...
+
+Scraping BBC Business Haberleri as type 'rss' from https://feeds.bbci.co.uk/news/business/rss.xml...
+>>> Fetched BBC Business Haberleri article. <<<
+>>> Fetched BBC Business Haberleri article. <<<
+
+Scraping Gerçek Example Sitesi as type 'html' from https://example.com/...
+>>> Fetched Gerçek Example Sitesi page title. <<<
+>>> NewsAPI test successful. <<<
+>>> Comtrade success. <<<
+
+Aggregating 7 events globally.
+Writing appended data to Data Lake at: 'C:\Users\Vizemo\Desktop\trade_intelligence_system\nexus_data_lake.jsonl'
+>>> Batch orchestration successfully completed. <<<

@@ -1,0 +1,42 @@
+[
+  {
+    "source_name": "BBC Business Haberleri",
+    "url": "https://feeds.bbci.co.uk/news/business/rss.xml",
+    "type": "rss",
+    "enabled": true,
+    "trust_score": 0.89,
+    "max_items": 5,
+    "language": "en",
+    "tags": ["macro", "global_trade"]
+  },
+  {
+    "source_name": "Reuters Business RSS",
+    "url": "https://feeds.reuters.com/reuters/businessNews",
+    "type": "rss",
+    "enabled": true,
+    "trust_score": 0.90,
+    "max_items": 5,
+    "language": "en",
+    "tags": ["macro", "commodities"]
+  },
+  {
+    "source_name": "BOSAD (Türk Boya Sanayicileri Derneği)",
+    "url": "https://www.bosad.org.tr/haber",
+    "type": "html",
+    "enabled": true,
+    "trust_score": 0.92,
+    "max_items": 3,
+    "language": "tr",
+    "tags": ["coatings", "turkish_market"]
+  },
+  {
+    "source_name": "Gerçek Example Sitesi",
+    "url": "https://example.com/",
+    "type": "html",
+    "enabled": false,
+    "trust_score": 0.50,
+    "max_items": 1,
+    "language": "en",
+    "tags": ["test"]
+  }
+]

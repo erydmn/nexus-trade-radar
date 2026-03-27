@@ -1,0 +1,8 @@
+
+Scraping PCI Magazine as type 'rss' from https://www.pcimag.com/rss/topic/2965-coatings...
+HTTP Error: Client error '403 Forbidden' for url 'https://www.pcimag.com/rss/topic/2965-coatings'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/403 while requesting https://www.pcimag.com/rss/topic/2965-coatings
+
+Scraping Turmet Custom Target as type 'html' from https://example.com/news...
+HTTP Error: Client error '404 Not Found' for url 'https://example.com/news'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/404 while requesting https://example.com/news
