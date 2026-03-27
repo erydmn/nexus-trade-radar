@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
-from typing import List, Literal
+from typing import List, Literal, Optional
+import re
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class AnalyzedSignal(BaseModel):
@@ -54,3 +55,22 @@ class AnalyzedSignal(BaseModel):
         default="Yok",
         description="Haberin orijinal kaynağına ait URL adresi."
     )
+
+    risk_category: Optional[str] = None
+    affected_regions: Optional[List[str]] = Field(default_factory=list)
+    relevant_hs_codes: Optional[List[str]] = Field(default_factory=list)
+
+    @field_validator("risk_category", mode="before")
+    @classmethod
+    def validate_risk(cls, v):
+        VALID = {"CUSTOMS_TARIFFS", "LOGISTICS", "GEOPOLITICAL", "SUPPLY_CHAIN", "TRADE_POLICY"}
+        if v and isinstance(v, str) and v.strip().upper() in VALID:
+            return v.strip().upper()
+        return None
+
+    @field_validator("affected_regions", "relevant_hs_codes", mode="before")
+    @classmethod
+    def coerce_to_list(cls, v):
+        if isinstance(v, str):
+            return [item.strip() for item in re.split(r"[,;]+", v) if item.strip()]
+        return v if v else []

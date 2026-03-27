@@ -28,6 +28,13 @@ def load_data() -> pd.DataFrame:
         df = pd.DataFrame(response.data)
         # Convert relevance_score to numeric, ignoring and handling potential nulls
         df["relevance_score"] = pd.to_numeric(df["relevance_score"], errors="coerce").fillna(0).astype(int)
+        
+        # Array filling for new columns safely
+        if "affected_regions" in df.columns:
+            df["affected_regions"] = df["affected_regions"].apply(lambda x: x if isinstance(x, list) else [])
+        if "relevant_hs_codes" in df.columns:
+            df["relevant_hs_codes"] = df["relevant_hs_codes"].apply(lambda x: x if isinstance(x, list) else [])
+            
         return df
         
     except Exception as e:
@@ -73,6 +80,9 @@ selected_sentiments = st.sidebar.multiselect(
     default=["POSITIVE", "NEGATIVE", "NEUTRAL"]
 )
 
+all_risk_cats = ["CUSTOMS_TARIFFS", "LOGISTICS", "GEOPOLITICAL", "SUPPLY_CHAIN", "TRADE_POLICY"]
+selected_risk = st.sidebar.multiselect("🛡️ Risk Kategorisi", options=all_risk_cats, default=all_risk_cats)
+
 # Main Feed Processing
 if df.empty:
     st.info("Sistemde henüz çözümlenmiş bir sinyal bulunmuyor.")
@@ -80,7 +90,8 @@ else:
     # Filter
     filtered_df = df[
         (df["relevance_score"] >= min_relevance_score) & 
-        (df["sentiment"].isin(selected_sentiments))
+        (df["sentiment"].isin(selected_sentiments)) &
+        (df["risk_category"].isin(selected_risk) | df["risk_category"].isna())
     ].copy()
     
     # Sort
@@ -116,7 +127,15 @@ else:
                 
                 # Footer with entities and sentiment
                 entities_str = ", ".join(row["entities"]) if isinstance(row["entities"], list) and len(row["entities"]) > 0 else "Yok"
+                
+                risk_cat = row.get("risk_category") if pd.notna(row.get("risk_category")) else "Bilinmiyor"
+                regions_list = row.get("affected_regions", [])
+                regions_str = ", ".join(regions_list) if isinstance(regions_list, list) and regions_list else "Belirtilmemiş"
+                hs_list = row.get("relevant_hs_codes", [])
+                hs_codes_str = ", ".join(hs_list) if isinstance(hs_list, list) and hs_list else "Yok"
+                
                 st.caption(f"**Duyarlılık:** {row['sentiment']} | **Varlıklar:** {entities_str} | **Tarih:** {row['analyzed_at']}")
+                st.caption(f"🛡️ **Risk:** {risk_cat} | 🌍 **Bölgeler:** {regions_str} | 🏷️ **HS Kodları:** {hs_codes_str}")
                 
                 if pd.notna(row.get('source_url')) and row['source_url'] != "Yok":
                     st.link_button("🔗 Haberin Kaynağına Git", str(row['source_url']))

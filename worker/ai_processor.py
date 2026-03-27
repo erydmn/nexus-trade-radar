@@ -23,7 +23,11 @@ class AIProcessor:
             "Only analyze true global trade and economic signals.\n\n"
             "Sen kıdemli bir Ticari İstihbarat Analistisin. Amacın ticaret haberlerini okuyup, "
             "bir CEO'ya JSON formatında stratejik tavsiyeler çıkarmaktır. Önemsiz veya magazin "
-            "haberlerine çok düşük relevance_score (0-20) ver ve actionable_insight kısmına 'Aksiyon gerekmiyor' yaz."
+            "haberlerine çok düşük relevance_score (0-20) ver ve actionable_insight kısmına 'Aksiyon gerekmiyor' yaz.\n\n"
+            "Classify the signal. Determine ONE risk_category (CUSTOMS_TARIFFS, LOGISTICS, GEOPOLITICAL, "
+            "SUPPLY_CHAIN, TRADE_POLICY, or null). Identify affected_regions as a JSON array of strings "
+            "(e.g., EU, APAC, NA). Extract relevant_hs_codes (HS/GTIP codes) as a JSON array of strings "
+            "(e.g., ['72', '2836']). Return [] if none."
         )
 
         response = await self.client.chat.completions.create(

@@ -78,7 +78,10 @@ async def process_batch():
                     "executive_summary": analyzed_signal.executive_summary,
                     "actionable_insight": analyzed_signal.actionable_insight,
                     "analyzed_at": analyzed_signal.analyzed_at.isoformat(),
-                    "source_url": event.metadata.get("url", "Yok")
+                    "source_url": event.metadata.get("url", "Yok"),
+                    "risk_category": analyzed_signal.risk_category,
+                    "affected_regions": analyzed_signal.affected_regions or [],
+                    "relevant_hs_codes": analyzed_signal.relevant_hs_codes or []
                 }).execute()
                 
                 processed_ids.add(event.event_id)
