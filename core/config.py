@@ -32,9 +32,9 @@ class Settings(BaseSettings):
     )
 
     # ── Haber / İçerik API'leri ─────────────────────────────────────────────
-    newsapi_key: SecretStr = Field(..., description="NewsAPI.org gizli anahtarı")
-    eventregistry_api_key: SecretStr = Field(..., description="EventRegistry gizli anahtarı")
-    the_guardian_api_key: SecretStr = Field(..., description="The Guardian Open Platform anahtarı")
+    newsapi_key: Optional[SecretStr] = Field(default=None, description="NewsAPI.org gizli anahtarı")
+    eventregistry_api_key: Optional[SecretStr] = Field(default=None, description="EventRegistry gizli anahtarı")
+    the_guardian_api_key: Optional[SecretStr] = Field(default=None, description="The Guardian Open Platform anahtarı")
     gnews_api_key: Optional[SecretStr] = Field(default=None, description="GNews API anahtarı (isteğe bağlı)")
     currents_api_key: Optional[SecretStr] = Field(default=None, description="Currents API anahtarı (isteğe bağlı)")
     mediastack_api_key: Optional[SecretStr] = Field(default=None, description="Mediastack API anahtarı (isteğe bağlı)")
@@ -50,13 +50,13 @@ class Settings(BaseSettings):
     serpapi_key: Optional[SecretStr] = Field(default=None)
 
     # ── Makro Ticaret (UN Comtrade) ──────────────────────────────────────────
-    comtrade_api_key_primary: SecretStr = Field(..., description="Birincil Comtrade API anahtarı")
+    comtrade_api_key_primary: Optional[SecretStr] = Field(default=None, description="Birincil Comtrade API anahtarı")
     comtrade_api_key_secondary: Optional[SecretStr] = Field(
         default=None, description="Yedek Comtrade API anahtarı (rate-limit aşımında devreye girer)"
     )
 
     # ── Lojistik / AIS / Uçuş ───────────────────────────────────────────────
-    aisstream_api_key: SecretStr = Field(..., description="AISStream.io WebSocket API anahtarı")
+    aisstream_api_key: Optional[SecretStr] = Field(default=None, description="AISStream.io WebSocket API anahtarı")
 
     # OpenSky: OAuth2 client credentials
     opensky_client_id: Optional[str] = Field(default=None)
@@ -69,10 +69,10 @@ class Settings(BaseSettings):
         default="https://gateway.api.globalfishingwatch.org",
         description="GFW API temel URL'si",
     )
-    gfw_api_token: SecretStr = Field(..., description="GFW Bearer token")
+    gfw_api_token: Optional[SecretStr] = Field(default=None, description="GFW Bearer token")
 
     # AviationStack
-    aviationstack_api_key: SecretStr = Field(..., description="AviationStack API anahtarı")
+    aviationstack_api_key: Optional[SecretStr] = Field(default=None, description="AviationStack API anahtarı")
 
     # ── Google OAuth2 (Media) ────────────────────────────────────────────────
     google_client_id: Optional[str] = Field(default=None)
