@@ -77,7 +77,8 @@ async def process_batch():
                     "entities": analyzed_signal.entities,
                     "executive_summary": analyzed_signal.executive_summary,
                     "actionable_insight": analyzed_signal.actionable_insight,
-                    "analyzed_at": analyzed_signal.analyzed_at.isoformat()
+                    "analyzed_at": analyzed_signal.analyzed_at.isoformat(),
+                    "source_url": event.metadata.get("url", "Yok")
                 }).execute()
                 
                 processed_ids.add(event.event_id)

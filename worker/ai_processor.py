@@ -16,6 +16,11 @@ class AIProcessor:
 
     async def analyze_event(self, raw_text: str, event_id: str) -> AnalyzedSignal:
         system_prompt = (
+            "You are an elite Chief Trade Intelligence Officer. Read the text. FIRST, evaluate if it is STRICTLY "
+            "related to international trade, macroeconomics, supply chains, tariffs, maritime/aviation logistics, or global sanctions. "
+            "If it is about entertainment (e.g., Marvel, movies), general tech gadgets, home decor, sports, or unrelated local politics, "
+            "you MUST immediately return relevance_score=0, actionable_insight='IRRELEVANT NOISE', and stop analysis. "
+            "Only analyze true global trade and economic signals.\n\n"
             "Sen kıdemli bir Ticari İstihbarat Analistisin. Amacın ticaret haberlerini okuyup, "
             "bir CEO'ya JSON formatında stratejik tavsiyeler çıkarmaktır. Önemsiz veya magazin "
             "haberlerine çok düşük relevance_score (0-20) ver ve actionable_insight kısmına 'Aksiyon gerekmiyor' yaz."

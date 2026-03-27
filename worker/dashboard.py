@@ -117,3 +117,6 @@ else:
                 # Footer with entities and sentiment
                 entities_str = ", ".join(row["entities"]) if isinstance(row["entities"], list) and len(row["entities"]) > 0 else "Yok"
                 st.caption(f"**Duyarlılık:** {row['sentiment']} | **Varlıklar:** {entities_str} | **Tarih:** {row['analyzed_at']}")
+                
+                if pd.notna(row.get('source_url')) and row['source_url'] != "Yok":
+                    st.link_button("🔗 Haberin Kaynağına Git", str(row['source_url']))

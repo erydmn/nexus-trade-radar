@@ -49,3 +49,8 @@ class AnalyzedSignal(BaseModel):
         default_factory=lambda: datetime.now(timezone.utc),
         description="Analizin yapıldığı UTC tabanlı zaman damgası."
     )
+    
+    source_url: str = Field(
+        default="Yok",
+        description="Haberin orijinal kaynağına ait URL adresi."
+    )
