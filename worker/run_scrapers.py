@@ -12,6 +12,7 @@ import asyncio
 from core.config import settings
 from worker.models.signal import RawEvent
 from worker.comtrade_service import run_comtrade_pipeline
+from worker.scrapers.advanced_news_scraper import fetch_gdelt_doc, fetch_event_registry, fetch_turkish_rss
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
@@ -115,7 +116,25 @@ def fetch_and_store_news():
     newsapi_events = fetch_newsapi()
     guardian_events = fetch_guardian()
     
-    all_events = newsapi_events + guardian_events
+    loop = asyncio.get_event_loop()
+    if loop.is_running():
+        # Inside async context like Streamlit or test runners
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            future = pool.submit(asyncio.run, asyncio.gather(
+                fetch_gdelt_doc(),
+                fetch_event_registry(),
+                fetch_turkish_rss()
+            ))
+            gdelt_events, event_registry_events, rss_events = future.result()
+    else:
+        gdelt_events, event_registry_events, rss_events = loop.run_until_complete(asyncio.gather(
+            fetch_gdelt_doc(),
+            fetch_event_registry(),
+            fetch_turkish_rss()
+        ))
+    
+    all_events = newsapi_events + guardian_events + gdelt_events + event_registry_events + rss_events
     if not all_events:
         logging.info("No articles found from any source.")
         return

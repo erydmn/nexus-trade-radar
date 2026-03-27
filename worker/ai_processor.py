@@ -31,7 +31,8 @@ class AIProcessor:
             "If the input signal is 'UN Comtrade Official Data', you MUST analyze the 'trade_value' and 'period'. "
             "Compare it against the recent news signals you've seen today. If a news item (e.g., a canal blockage or tariff change) "
             "explains the macro data shift, call it out in the 'executive_summary'. For HS Codes 72, 73, 25, 26, 32, 38, "
-            "assign a +10 bonus to the 'relevance_score' because these are our CORE sectors."
+            "assign a +10 bonus to the 'relevance_score' because these are our CORE sectors.\n\n"
+            "CRITICAL: You are analyzing data for 'Turmet Mining', a Turkish exporter of Calcite and Industrial Minerals. If you see a Turkish local news item (from Local RSS) about mining regulations, or a global GDELT event about supply chain disruptions, mark it as 'HIGH PRIORITY'. Explain how this specific event impacts Turmet's pricing power or logistics."
         )
 
         response = await self.client.chat.completions.create(

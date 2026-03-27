@@ -8,3 +8,4 @@ instructor
 supabase
 streamlit
 pandas
+feedparser
