@@ -28,6 +28,8 @@ class AIProcessor:
             "SUPPLY_CHAIN, TRADE_POLICY, or null). Identify affected_regions as a JSON array of strings "
             "(e.g., EU, APAC, NA). Extract relevant_hs_codes (HS/GTIP codes) as a JSON array of strings "
             "(e.g., ['72', '2836']). Return [] if none.\n\n"
+            "RUTHLESS FILTER: You are strictly an Industrial & Mining Intelligence AI for 'Turmet'. If a news event is about general tech, HR (e.g., Revolut), old dates (before 2026), or irrelevant sectors, you MUST assign a 'score' of 0 and set 'Status: Aksiyon gerekmiyor'. Do not waste dashboard space on them.\n\n"
+            "HS CODE ENFORCER: If the news is about mining, minerals, calcite, or related logistics, you MUST extract or assign the relevant HS Code (e.g., '25' for Salt/Earth/Stone, '26' for Ores, '283650' for Calcite). Never leave it blank for industrial news.\n\n"
             "If the input signal is 'UN Comtrade Official Data', you MUST analyze the 'trade_value' and 'period'. "
             "Compare it against the recent news signals you've seen today. If a news item (e.g., a canal blockage or tariff change) "
             "explains the macro data shift, call it out in the 'executive_summary'. For HS Codes 72, 73, 25, 26, 32, 38, "

@@ -6,7 +6,8 @@ import httpx
 import feedparser
 from core.config import settings
 from worker.models.signal import RawEvent
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+from time import mktime
 
 logger = logging.getLogger("nexus.advanced")
 
@@ -17,7 +18,8 @@ async def fetch_gdelt_doc():
         "mode": "artlist",
         "maxrecords": 15,
         "format": "json",
-        "sort": "DateDesc"
+        "sort": "DateDesc",
+        "timespan": "7d"
     }
     
     events = []
@@ -50,12 +52,16 @@ async def fetch_event_registry():
     api_key = settings.eventregistry_api_key.get_secret_value() if hasattr(settings.eventregistry_api_key, 'get_secret_value') else settings.eventregistry_api_key
     
     url = "https://eventregistry.org/api/v1/article/getArticles"
+    # 7 days ago string for Event Registry
+    cutoff_str = (datetime.now(timezone.utc) - timedelta(days=7)).strftime('%Y-%m-%d')
+    
     payload = {
         "keyword": ["calcite", "paint industry", "coating", "mineral"],
         "keywordOper": "or",
         "lang": ["eng", "tur"],
         "articlesCount": 10,
-        "apiKey": api_key
+        "apiKey": api_key,
+        "dateStart": cutoff_str
     }
     
     events = []
@@ -90,7 +96,14 @@ async def fetch_turkish_rss():
             
             # Run feedparser parsing in thread to avoid blocking loop
             feed = await asyncio.to_thread(feedparser.parse, resp.text)
+            cutoff = datetime.now(timezone.utc) - timedelta(days=7)
+            
             for entry in feed.entries[:10]:
+                if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                    dt = datetime.fromtimestamp(mktime(entry.published_parsed), timezone.utc)
+                    if dt < cutoff:
+                        continue
+                        
                 title = entry.get('title', '')
                 desc = entry.get('description', '')
                 if title:
