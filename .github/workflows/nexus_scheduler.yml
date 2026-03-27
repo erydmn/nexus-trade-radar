@@ -22,6 +22,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Fetch Real-World News
+        env:
+          NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
+          THE_GUARDIAN_API_KEY: ${{ secrets.THE_GUARDIAN_API_KEY }}
+        run: python worker/run_scrapers.py
+
       - name: Run AI Trade Radar Batch Processor
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
