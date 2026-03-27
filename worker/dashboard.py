@@ -1,3 +1,10 @@
+import sys
+from pathlib import Path
+
+# Add project root to Python path so it can find the 'core' module
+root_dir = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(root_dir))
+
 import pandas as pd
 import streamlit as st
 from core.db import get_supabase_client
