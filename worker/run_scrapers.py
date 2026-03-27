@@ -109,11 +109,66 @@ def fetch_guardian():
         
     return events
 
+def fetch_comtrade_data():
+    if not settings.comtrade_api_key_primary:
+        logging.warning("COMTRADE_API_KEY_PRIMARY not found. Skipping UN Comtrade.")
+        return []
+        
+    # Handle SecretStr if using pydantic
+    api_key = settings.comtrade_api_key_primary.get_secret_value() if hasattr(settings.comtrade_api_key_primary, 'get_secret_value') else settings.comtrade_api_key_primary
+    
+    url = "https://comtradeapi.un.org/data/v1/get/C/A/HS"
+    headers = {"Ocp-Apim-Subscription-Key": api_key}
+    params = {
+        "reporterCode": 792,
+        "partnerCode": 0,
+        "cmdCode": "72,84,87",
+        "period": 2023,
+        "flowCode": "M,X"
+    }
+    
+    logging.info("Fetching real-world macro trade data from UN Comtrade...")
+    
+    events = []
+    try:
+        response = httpx.get(url, headers=headers, params=params, timeout=20.0)
+        response.raise_for_status()
+        data = response.json()
+        
+        records = data.get("data", [])
+        if not records:
+            logging.info("No records found in UN Comtrade response.")
+            return events
+            
+        for record in records:
+            cmdCode = record.get("cmdCode", "Unknown")
+            flowCode = record.get("flowCode", "Unknown")
+            primaryValue = record.get("primaryValue", 0)
+            period = record.get("period", "Unknown")
+            reporterDesc = record.get("reporterDesc", "Turkey")
+            partnerDesc = record.get("partnerDesc", "World")
+            
+            summary = (f"UN Comtrade Official Data: Reporter: {reporterDesc}, "
+                       f"Partner: {partnerDesc}, Flow: {flowCode}, "
+                       f"HS Code: {cmdCode}, Value: {primaryValue} USD, Period: {period}.")
+            
+            event = RawEvent(
+                source="UN Comtrade API",
+                raw_text=summary,
+                metadata={"url": "https://comtradeplus.un.org"}
+            )
+            events.append(event)
+    except Exception as e:
+        logging.error(f"Failed to fetch data from UN Comtrade: {e}")
+        
+    return events
+
 def fetch_and_store_news():
     newsapi_events = fetch_newsapi()
     guardian_events = fetch_guardian()
+    comtrade_events = fetch_comtrade_data()
     
-    all_events = newsapi_events + guardian_events
+    all_events = newsapi_events + guardian_events + comtrade_events
     if not all_events:
         logging.info("No articles found from any source.")
         return

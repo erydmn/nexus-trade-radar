@@ -26,6 +26,7 @@ jobs:
         env:
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
           THE_GUARDIAN_API_KEY: ${{ secrets.THE_GUARDIAN_API_KEY }}
+          COMTRADE_API_KEY_PRIMARY: ${{ secrets.COMTRADE_API_KEY_PRIMARY }}
         run: python worker/run_scrapers.py
 
       - name: Run AI Trade Radar Batch Processor
