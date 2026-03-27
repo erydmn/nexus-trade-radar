@@ -82,8 +82,8 @@ class Settings(BaseSettings):
     groq_api_key: Optional[SecretStr] = Field(default=None, description="Groq Llama 3 API anahtarı")
 
     # ── Veritabanı (Supabase) ────────────────────────────────────────────────
-    supabase_url: str = Field(default=None, description="Supabase API URL")
-    supabase_key: SecretStr = Field(default=None, description="Supabase API Key")
+    supabase_url: Optional[str] = Field(default=None, description="Supabase API URL")
+    supabase_key: Optional[SecretStr] = Field(default=None, description="Supabase API Key")
 
     # ── Uygulama Genel ──────────────────────────────────────────────────────
     data_lake_path: str = Field(
