@@ -27,7 +27,11 @@ class AIProcessor:
             "Classify the signal. Determine ONE risk_category (CUSTOMS_TARIFFS, LOGISTICS, GEOPOLITICAL, "
             "SUPPLY_CHAIN, TRADE_POLICY, or null). Identify affected_regions as a JSON array of strings "
             "(e.g., EU, APAC, NA). Extract relevant_hs_codes (HS/GTIP codes) as a JSON array of strings "
-            "(e.g., ['72', '2836']). Return [] if none."
+            "(e.g., ['72', '2836']). Return [] if none.\n\n"
+            "If the input signal is 'UN Comtrade Official Data', you MUST analyze the 'trade_value' and 'period'. "
+            "Compare it against the recent news signals you've seen today. If a news item (e.g., a canal blockage or tariff change) "
+            "explains the macro data shift, call it out in the 'executive_summary'. For HS Codes 72, 73, 25, 26, 32, 38, "
+            "assign a +10 bonus to the 'relevance_score' because these are our CORE sectors."
         )
 
         response = await self.client.chat.completions.create(

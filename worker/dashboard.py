@@ -106,7 +106,22 @@ else:
         for index, row in filtered_df.iterrows():
             # Container for each intelligence card
             with st.container(border=True):
-                st.subheader(row["executive_summary"])
+                SECTOR_ICONS = {
+                    "72": "🏗️", "73": "⚙️", "25": "🧱", 
+                    "26": "⛏️", "32": "🎨", "38": "🧪"
+                }
+                
+                current_hs = row.get("relevant_hs_codes", [])
+                icon_prefix = ""
+                for code in current_hs:
+                    if code[:2] in SECTOR_ICONS:
+                        icon_prefix += SECTOR_ICONS[code[:2]] + " "
+                
+                # Add the icon to the title display
+                if icon_prefix:
+                    st.subheader(f"{icon_prefix.strip()} {row['executive_summary']}")
+                else:
+                    st.subheader(row['executive_summary'])
                 
                 # Relevance progress display
                 score = row["relevance_score"]

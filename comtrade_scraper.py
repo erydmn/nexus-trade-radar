@@ -1,19 +1,19 @@
-﻿"""
-NEXUS Trade Radar â€” UN Comtrade Scraper v2.0
+"""
+NEXUS Trade Radar — UN Comtrade Scraper v2.0
 =============================================
-comtrade_service.py ile entegre Ã§alÄ±ÅŸan, BaseAPIClient tabanlÄ± scraper katmanÄ±.
+comtrade_service.py ile entegre çalışan, BaseAPIClient tabanlı scraper katmanı.
 
-v2.0 Ä°yileÅŸtirmeleri:
-  â€¢ ComtradeClient (async, paginated, rate-limited) doÄŸrudan kullanÄ±lÄ±r
-  â€¢ Birincil â†’ ikincil API anahtarÄ± geÃ§iÅŸi anahtar dÃ¼zeyinde deÄŸil,
-    istek dÃ¼zeyinde yÃ¶netilir (per-request failover)
-  â€¢ Ã‡ok-dÃ¶nemli toplu sorgu: fetch_bulk_flows() ile tek Ã§aÄŸrÄ±da
-    birden fazla HS kodu + dÃ¶nem + yÃ¶n
-  â€¢ Minerals vertical iÃ§in Ã¶nceden yapÄ±landÄ±rÄ±lmÄ±ÅŸ kÄ±sayollar
+v2.0 İyileştirmeleri:
+  • ComtradeClient (async, paginated, rate-limited) doğrudan kullanılır
+  • Birincil → ikincil API anahtarı geçişi anahtar düzeyinde değil,
+    istek düzeyinde yönetilir (per-request failover)
+  • Çok-dönemli toplu sorgu: fetch_bulk_flows() ile tek çağrıda
+    birden fazla HS kodu + dönem + yön
+  • Minerals vertical için önceden yapılandırılmış kısayollar
     (calcite, dolomite, talc, kaolin, paint/coatings)
-  â€¢ Anomali ve denge sinyalleri doÄŸrudan RawEvent'e dÃ¶nÃ¼ÅŸtÃ¼rÃ¼lÃ¼r
-  â€¢ trust_score, tags, language alanlarÄ± doldurulur
-  â€¢ Geriye uyumluluk alias'larÄ± korunur (mevcut main.py bozulmaz)
+  • Anomali ve denge sinyalleri doğrudan RawEvent'e dönüştürülür
+  • trust_score, tags, language alanları doldurulur
+  • Geriye uyumluluk alias'ları korunur (mevcut main.py bozulmaz)
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ from core.config import settings
 from worker.models.signal import RawEvent
 from worker.scrapers.base_scraper import BaseAPIClient
 
-# comtrade_service.py â†’ tek gerÃ§ek kaynak (tek sorumluluk)
+# comtrade_service.py → tek gerçek kaynak (tek sorumluluk)
 from worker.scrapers.comtrade_service import (
     ComtradeClient,
     ComtradeAnalytics,
@@ -46,7 +46,7 @@ logger = logging.getLogger(__name__)
 root_dir = Path(__file__).resolve().parent.parent
 
 # ---------------------------------------------------------------------------
-# HS Kod gruplarÄ± â€” Minerals vertical + genel Trade Radar
+# HS Kod grupları — Minerals vertical + genel Trade Radar
 # ---------------------------------------------------------------------------
 HS_GROUPS: dict[str, list[str]] = {
     "minerals": ["252010", "252020", "252610", "252620", "250700", "283650"],
@@ -58,7 +58,7 @@ HS_GROUPS: dict[str, list[str]] = {
     "agri": ["0702", "0805"],
 }
 
-# Etiket â†’ HS grubu eÅŸlemesi (RawEvent.tags iÃ§in)
+# Etiket → HS grubu eşlemesi (RawEvent.tags için)
 _GROUP_TAGS: dict[str, list[str]] = {
     "minerals":      ["minerals", "industrial_minerals", "turmet"],
     "paint_coatings":["paint", "coatings", "b2b_customer"],
@@ -69,17 +69,17 @@ _GROUP_TAGS: dict[str, list[str]] = {
     "agri":          ["agriculture", "fresh_produce"],
 }
 
-# trust_score: resmi UN istatistiÄŸi â†’ 0.97
+# trust_score: resmi UN istatistiği → 0.97
 _COMTRADE_TRUST = 0.97
 
 
 # ---------------------------------------------------------------------------
-# YardÄ±mcÄ±: API anahtarÄ±nÄ± al (birincil / ikincil failover)
+# Yardımcı: API anahtarını al (birincil / ikincil failover)
 # ---------------------------------------------------------------------------
 def _resolve_api_key(use_secondary: bool = False) -> Optional[str]:
     """
-    Birincil veya ikincil Comtrade API anahtarÄ±nÄ± dÃ¶ndÃ¼rÃ¼r.
-    use_secondary=True iken ikincil anahtar yoksa birincile dÃ¼ÅŸer.
+    Birincil veya ikincil Comtrade API anahtarını döndürür.
+    use_secondary=True iken ikincil anahtar yoksa birincile düşer.
     """
     primary = settings.comtrade_api_key_primary
     secondary = getattr(settings, "comtrade_api_key_secondary", None)
@@ -99,28 +99,28 @@ def _resolve_api_key(use_secondary: bool = False) -> Optional[str]:
 # ---------------------------------------------------------------------------
 class ComtradeScraper(BaseAPIClient):
     """
-    UN Comtrade API'den ticaret akÄ±ÅŸ verisi Ã§eken scraper sÄ±nÄ±fÄ±.
+    UN Comtrade API'den ticaret akış verisi çeken scraper sınıfı.
 
     Mimari not:
     -----------
-    Ham HTTP iÅŸleri ComtradeClient (comtrade_service.py) Ã¼stlenir.
-    Bu sÄ±nÄ±f:
-      1. NEXUS domain parametrelerini (HS grubu, reporter, partner, dÃ¶nem) yÃ¶netir,
-      2. ComtradeRecord â†’ RawEvent dÃ¶nÃ¼ÅŸÃ¼mÃ¼nÃ¼ yapar,
+    Ham HTTP işleri ComtradeClient (comtrade_service.py) üstlenir.
+    Bu sınıf:
+      1. NEXUS domain parametrelerini (HS grubu, reporter, partner, dönem) yönetir,
+      2. ComtradeRecord → RawEvent dönüşümünü yapar,
       3. Analitik sinyalleri (denge, YoY anomali) ekler,
-      4. BaseAPIClient miras hiyerarÅŸisini korur.
+      4. BaseAPIClient miras hiyerarşisini korur.
     """
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         primary_key = _resolve_api_key(use_secondary=False)
         if not primary_key:
-            raise ValueError("COMTRADE_API_KEY_PRIMARY yapÄ±landÄ±rÄ±lmamÄ±ÅŸ.")
+            raise ValueError("COMTRADE_API_KEY_PRIMARY yapılandırılmamış.")
         self._primary_key = primary_key
         self._secondary_key = _resolve_api_key(use_secondary=True)
 
     # ------------------------------------------------------------------
-    # DÃ¼ÅŸÃ¼k seviye: tek HS grubu + dÃ¶nem + yÃ¶n
+    # Düşük seviye: tek HS grubu + dönem + yön
     # ------------------------------------------------------------------
 
     async def fetch_trade_flows(
@@ -135,18 +135,18 @@ class ComtradeScraper(BaseAPIClient):
         use_secondary_key: bool = False,
     ) -> list[RawEvent]:
         """
-        Tek bir HS kodu iÃ§in ticaret akÄ±ÅŸlarÄ±nÄ± Ã§eker.
+        Tek bir HS kodu için ticaret akışlarını çeker.
 
         Parametreler
         ------------
-        cmd_code        : HS kodu (Ã¶rn. "283650" = kalsit)
-        reporter_code   : Raporlayan Ã¼lke kodu (Ã¶rn. "792" = TÃ¼rkiye)
-        partner_code    : Partner Ã¼lke kodu; None â†’ DÃ¼nya toplamÄ± (0)
-        period          : "2023" (yÄ±llÄ±k) veya "202301" (aylÄ±k)
+        cmd_code        : HS kodu (örn. "283650" = kalsit)
+        reporter_code   : Raporlayan ülke kodu (örn. "792" = Türkiye)
+        partner_code    : Partner ülke kodu; None → Dünya toplamı (0)
+        period          : "2023" (yıllık) veya "202301" (aylık)
         flow_code       : "X"=ihracat | "M"=ithalat | "RX"=re-ihracat
-        frequency       : "A"=yÄ±llÄ±k | "M"=aylÄ±k
-        max_records     : Sayfa baÅŸÄ±na maksimum kayÄ±t (â‰¤500)
-        use_secondary_key: True â†’ ikincil API anahtarÄ±nÄ± kullan
+        frequency       : "A"=yıllık | "M"=aylık
+        max_records     : Sayfa başına maksimum kayıt (≤500)
+        use_secondary_key: True → ikincil API anahtarını kullan
         """
         api_key = self._secondary_key if use_secondary_key else self._primary_key
 
@@ -167,11 +167,11 @@ class ComtradeScraper(BaseAPIClient):
                     start_record=0,
                 )
         except Exception as exc:
-            # Birincil baÅŸarÄ±sÄ±z â†’ ikincil anahtar ile otomatik fallback
+            # Birincil başarısız → ikincil anahtar ile otomatik fallback
             if not use_secondary_key and self._secondary_key:
                 logger.warning(
-                    "Birincil Comtrade anahtarÄ± baÅŸarÄ±sÄ±z (%s), "
-                    "ikincil anahtar devreye giriyorâ€¦",
+                    "Birincil Comtrade anahtarı başarısız (%s), "
+                    "ikincil anahtar devreye giriyor…",
                     exc,
                 )
                 return await self.fetch_trade_flows(
@@ -184,7 +184,7 @@ class ComtradeScraper(BaseAPIClient):
                     max_records=max_records,
                     use_secondary_key=True,
                 )
-            logger.error("Comtrade fetch_trade_flows hatasÄ±: %s", exc)
+            logger.error("Comtrade fetch_trade_flows hatası: %s", exc)
             return [
                 RawEvent.error_event(
                     source="UN Comtrade",
@@ -200,13 +200,13 @@ class ComtradeScraper(BaseAPIClient):
 
         if not records:
             logger.warning(
-                "Comtrade: SonuÃ§ boÅŸ â€” HS=%s, reporter=%s, period=%s, flow=%s",
+                "Comtrade: Sonuç boş — HS=%s, reporter=%s, period=%s, flow=%s",
                 cmd_code, reporter_code, period, flow_code,
             )
             return [
                 RawEvent.error_event(
                     source="UN Comtrade",
-                    reason="SonuÃ§ kÃ¼mesi boÅŸ. Parametre veya kota sorunu olabilir.",
+                    reason="Sonuç kümesi boş. Parametre veya kota sorunu olabilir.",
                     metadata={
                         "cmd_code": cmd_code,
                         "reporter_code": reporter_code,
@@ -215,7 +215,7 @@ class ComtradeScraper(BaseAPIClient):
                 )
             ]
 
-        # HS grubunu bul â†’ tag listesi
+        # HS grubunu bul → tag listesi
         group_name = next(
             (g for g, codes in HS_GROUPS.items() if cmd_code in codes), "general"
         )
@@ -258,13 +258,13 @@ class ComtradeScraper(BaseAPIClient):
             events.append(ev)
 
         logger.info(
-            "Comtrade fetch_trade_flows: %d olay â€” HS=%s, flow=%s, period=%s",
+            "Comtrade fetch_trade_flows: %d olay — HS=%s, flow=%s, period=%s",
             len(events), cmd_code, flow_code, period,
         )
         return events
 
     # ------------------------------------------------------------------
-    # YÃ¼ksek seviye: toplu Ã§ok-dÃ¶nemli sorgu + analitik sinyaller
+    # Yüksek seviye: toplu çok-dönemli sorgu + analitik sinyaller
     # ------------------------------------------------------------------
 
     async def fetch_bulk_flows(
@@ -278,20 +278,20 @@ class ComtradeScraper(BaseAPIClient):
         concurrency: int = 3,
     ) -> list[RawEvent]:
         """
-        Birden fazla HS grubu, dÃ¶nem ve reporter iÃ§in toplu async sorgu.
+        Birden fazla HS grubu, dönem ve reporter için toplu async sorgu.
 
         Ek olarak include_analytics=True iken ticaret dengesi ve YoY
-        anomali sinyalleri de Ã¼retilir.
+        anomali sinyalleri de üretilir.
 
         Parametreler
         ------------
-        hs_groups       : HS_GROUPS anahtarlarÄ± (Ã¶rn. ["minerals", "paint_coatings"])
-        reporters       : Raporlayan Ã¼lke kodlarÄ±
-        partners        : Partner Ã¼lke kodlarÄ± (0 = DÃ¼nya toplamÄ±)
-        annual_periods  : YÄ±llÄ±k sorgu dÃ¶nemleri
-        monthly_periods : AylÄ±k sorgu dÃ¶nemleri; None â†’ otomatik son 12 ay
-        include_analytics: True â†’ denge + YoY anomali sinyalleri ekle
-        concurrency     : EÅŸ zamanlÄ± HTTP isteÄŸi sayÄ±sÄ±
+        hs_groups       : HS_GROUPS anahtarları (örn. ["minerals", "paint_coatings"])
+        reporters       : Raporlayan ülke kodları
+        partners        : Partner ülke kodları (0 = Dünya toplamı)
+        annual_periods  : Yıllık sorgu dönemleri
+        monthly_periods : Aylık sorgu dönemleri; None → otomatik son 12 ay
+        include_analytics: True → denge + YoY anomali sinyalleri ekle
+        concurrency     : Eş zamanlı HTTP isteği sayısı
         """
         if monthly_periods is None:
             from datetime import date
@@ -301,18 +301,18 @@ class ComtradeScraper(BaseAPIClient):
                 for m in range(1, 13)
             ]
 
-        # SeÃ§ilen HS gruplarÄ±nÄ± flat liste halinde birleÅŸtir, 10'luk gruplara bÃ¶l
+        # Seçilen HS gruplarını flat liste halinde birleştir, 10'luk gruplara böl
         all_codes: list[str] = []
         for g in hs_groups:
             all_codes.extend(HS_GROUPS.get(g, []))
-        # API limiti: istek baÅŸÄ±na â‰¤10 HS kodu
+        # API limiti: istek başına ≤10 HS kodu
         cmd_groups = [all_codes[i:i+10] for i in range(0, len(all_codes), 10)]
 
         all_records: list[ComtradeRecord] = []
 
         try:
             async with ComtradeClient(self._primary_key) as client:
-                # YÄ±llÄ±k veri
+                # Yıllık veri
                 annual = await client.fetch_bulk(
                     frequency="A",
                     reporters=list(reporters),
@@ -324,11 +324,11 @@ class ComtradeScraper(BaseAPIClient):
                 )
                 all_records.extend(annual)
 
-                # AylÄ±k veri
+                # Aylık veri
                 monthly = await client.fetch_bulk(
                     frequency="M",
                     reporters=list(reporters),
-                    partners=[0],           # aylÄ±k: sadece DÃ¼nya toplamÄ±
+                    partners=[0],           # aylık: sadece Dünya toplamı
                     cmd_groups=cmd_groups,
                     periods=list(monthly_periods),
                     flows=["M", "X"],
@@ -337,13 +337,13 @@ class ComtradeScraper(BaseAPIClient):
                 all_records.extend(monthly)
 
         except Exception as exc:
-            logger.error("fetch_bulk_flows ComtradeClient hatasÄ±: %s", exc)
+            logger.error("fetch_bulk_flows ComtradeClient hatası: %s", exc)
 
         if not all_records:
-            logger.warning("fetch_bulk_flows: hiÃ§ kayÄ±t alÄ±namadÄ±.")
+            logger.warning("fetch_bulk_flows: hiç kayıt alınamadı.")
             return []
 
-        # YapÄ±sal kayÄ±tlarÄ± diske yaz (Neo4j / TimescaleDB import iÃ§in)
+        # Yapısal kayıtları diske yaz (Neo4j / TimescaleDB import için)
         struct_path = root_dir / "comtrade_structured_records.jsonl"
         save_structured_records(all_records, struct_path)
 
@@ -386,18 +386,18 @@ class ComtradeScraper(BaseAPIClient):
             events.extend(anomaly_events)
 
             logger.info(
-                "Analitik: %d denge Ã¶zeti, %d YoY anomali Ã¼retildi.",
+                "Analitik: %d denge özeti, %d YoY anomali üretildi.",
                 len(balance_events), len(anomaly_events),
             )
 
         logger.info(
-            "fetch_bulk_flows tamamlandÄ±: %d kayÄ±t â†’ %d sinyal",
+            "fetch_bulk_flows tamamlandı: %d kayıt → %d sinyal",
             len(all_records), len(events),
         )
         return events
 
     # ------------------------------------------------------------------
-    # Minerals vertical kÄ±sayollarÄ±
+    # Minerals vertical kısayolları
     # ------------------------------------------------------------------
 
     async def fetch_calcite_exports(
@@ -405,7 +405,7 @@ class ComtradeScraper(BaseAPIClient):
         period: str = "2023",
         reporter_code: str = "792",
     ) -> list[RawEvent]:
-        """TÃ¼rkiye kalsit ihracatÄ± (HS 283650) iÃ§in Ã¶nceden yapÄ±landÄ±rÄ±lmÄ±ÅŸ kÄ±sayol."""
+        """Türkiye kalsit ihracatı (HS 283650) için önceden yapılandırılmış kısayol."""
         return await self.fetch_trade_flows(
             cmd_code="283650",
             reporter_code=reporter_code,
@@ -419,7 +419,7 @@ class ComtradeScraper(BaseAPIClient):
         period: str = "2023",
         reporter_code: str = "792",
     ) -> list[RawEvent]:
-        """TÃ¼rkiye dolomit ihracatÄ± (HS 252010 + 252020)."""
+        """Türkiye dolomit ihracatı (HS 252010 + 252020)."""
         events: list[RawEvent] = []
         for hs in ["252010", "252020"]:
             events.extend(
@@ -437,7 +437,7 @@ class ComtradeScraper(BaseAPIClient):
         period: str = "2023",
         reporter_code: str = "792",
     ) -> list[RawEvent]:
-        """TÃ¼rkiye talk ihracatÄ± (HS 252610 + 252620)."""
+        """Türkiye talk ihracatı (HS 252610 + 252620)."""
         events: list[RawEvent] = []
         for hs in ["252610", "252620"]:
             events.extend(
@@ -455,7 +455,7 @@ class ComtradeScraper(BaseAPIClient):
         period: str = "2023",
         reporter_code: str = "792",
     ) -> list[RawEvent]:
-        """TÃ¼rkiye kaolin ihracatÄ± (HS 250700)."""
+        """Türkiye kaolin ihracatı (HS 250700)."""
         return await self.fetch_trade_flows(
             cmd_code="250700",
             reporter_code=reporter_code,
@@ -469,9 +469,9 @@ class ComtradeScraper(BaseAPIClient):
         reporter_code: str = "792",
     ) -> list[RawEvent]:
         """
-        TÃ¼rkiye'ye boya/kaplama ithalatÄ± â€” Turmet'in mÃ¼ÅŸteri segmenti (Jotun, Akzo Nobelâ€¦).
-        Buradaki ithalat artÄ±ÅŸÄ± â†’ boyacÄ± segmentinin bÃ¼yÃ¼mesi â†’ kalsit/dolomit talebinin
-        artÄ±ÅŸÄ±na dair dolaylÄ± sinyal.
+        Türkiye'ye boya/kaplama ithalatı — Turmet'in müşteri segmenti (Jotun, Akzo Nobel…).
+        Buradaki ithalat artışı → boyacı segmentinin büyümesi → kalsit/dolomit talebinin
+        artışına dair dolaylı sinyal.
         """
         events: list[RawEvent] = []
         for hs in ["320810", "320890", "320910", "320990", "321490"]:
@@ -490,10 +490,10 @@ class ComtradeScraper(BaseAPIClient):
         periods: list[str] = ("2021", "2022", "2023"),
     ) -> list[RawEvent]:
         """
-        Minerals vertical iÃ§in eksiksiz gÃ¶rÃ¼nÃ¼m:
-          â€¢ TÃ¼m minerals + paint/coatings HS kodlarÄ±
-          â€¢ 3 yÄ±llÄ±k trend + son 12 ay
-          â€¢ Denge ve YoY anomali sinyalleri dahil
+        Minerals vertical için eksiksiz görünüm:
+          • Tüm minerals + paint/coatings HS kodları
+          • 3 yıllık trend + son 12 ay
+          • Denge ve YoY anomali sinyalleri dahil
         """
         return await self.fetch_bulk_flows(
             hs_groups=["minerals", "paint_coatings"],
@@ -510,7 +510,7 @@ class ComtradeScraper(BaseAPIClient):
 
     async def scrape(self) -> list[RawEvent]:
         """
-        BaseAPIClient.scrape() abstract metodunu karÅŸÄ±lar.
-        VarsayÄ±lan olarak minerals full picture Ã§eker.
+        BaseAPIClient.scrape() abstract metodunu karşılar.
+        Varsayılan olarak minerals full picture çeker.
         """
         return await self.fetch_minerals_full_picture()

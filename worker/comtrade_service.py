@@ -603,20 +603,20 @@ async def run_comtrade_pipeline() -> list[RawEvent]:
         else settings.comtrade_api_key_primary
     )
 
-    # --- HS kod grupları (API maks 10 kod/istek sınırı) -------------------
-    minerals_codes = ["252010", "252020", "252610", "252620", "250700", "283650"]
-    paint_codes    = ["320810", "320890", "320910", "320990", "321490"]
-    steel_codes    = ["7208", "7210", "7225"]
-    auto_codes     = ["8411", "8708"]
-    textile_codes  = ["6203", "6204"]
-    plastic_codes  = ["3901", "3902"]
-
-    cmd_groups = [
-        minerals_codes,
-        paint_codes,
-        steel_codes + auto_codes,
-        textile_codes + plastic_codes,
+    TARGETS = [
+        {"cmd": "72", "flow": "X", "label": "Demir ve Çelik (Fasıl 72)"},
+        {"cmd": "73", "flow": "X", "label": "Demir/Çelik Eşya (Fasıl 73)"},
+        {"cmd": "25", "flow": "X", "label": "Tuz, Kükürt, Toprak, Taş ve Alçı (Fasıl 25)"},
+        {"cmd": "26", "flow": "X", "label": "Metal Cevherleri ve Cüruf (Fasıl 26)"},
+        {"cmd": "32", "flow": "X", "label": "Boya, Vernik ve Macunlar (Fasıl 32)"},
+        {"cmd": "38", "flow": "X", "label": "Muhtelif Kimyasal Maddeler (Fasıl 38)"}
     ]
+    
+    # Update global HS_CODES with our precise labels
+    for t in TARGETS:
+        HS_CODES[t["cmd"]] = t["label"]
+
+    cmd_groups = [[t["cmd"] for t in TARGETS]]
 
     # --- Sorgu parametreleri -----------------------------------------------
     # Yıllık: 3 yıl trend analizi için
