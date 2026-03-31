@@ -1,6 +1,6 @@
 """
-NEXUS Trade Radar — Faz 8
-UN Comtrade Makro Veri Entegrasyonu v2.0
+NEXUS Trade Radar — Faz 12
+UN Comtrade Makro Veri Entegrasyonu v3.0
 -----------------------------------------
 İyileştirmeler:
   • Async/concurrent HTTP (httpx.AsyncClient)
@@ -16,6 +16,7 @@ UN Comtrade Makro Veri Entegrasyonu v2.0
   • Zengin sinyal üretimi — RawEvent'e anlamlı metin gider
   • SHA-256 dedup (yeniden çalıştırmada duplicate yok)
   • Supabase + yerel JSONL çift yazma
+  • [Faz 12] Calcite (HS 283650) rakip ülke takibi — TR/EG/GR ihracat karşılaştırması
 """
 
 import sys
@@ -102,6 +103,8 @@ REPORTERS: dict[int, str] = {
     804: "Ukrayna",
     156: "Çin",
     842: "ABD",
+    818: "Mısır",         # Calcite competitor
+    300: "Yunanistan",    # Calcite competitor
 }
 
 # Anahtar ticaret ortakları (partner 0 = Dünya)
@@ -662,6 +665,38 @@ async def run_comtrade_pipeline() -> list[RawEvent]:
         )
         all_records.extend(monthly_records)
         logger.info(f"Aylık: {len(monthly_records)} kayıt alındı")
+
+        # ── [Faz 12] Calcite (HS 283650) rakip ülke ihracat takibi ─────────
+        # Turmet'in ana ürünü: Kalsiyum Karbonat (Kalsit)
+        # Rakip ülkeler: Mısır (818), Yunanistan (300)
+        calcite_reporters = [792, 818, 300]  # TR, EG, GR
+        calcite_cmd = [["283650"]]
+        calcite_partners = [0, 276, 380, 840, 156, 826]  # Dünya, DE, IT, US, CN, UK
+
+        logger.info("── [Faz 12] Calcite (HS 283650) rakip analizi başlıyor ──")
+        calcite_annual = await client.fetch_bulk(
+            frequency="A",
+            reporters=calcite_reporters,
+            partners=calcite_partners,
+            cmd_groups=calcite_cmd,
+            periods=annual_periods,
+            flows=["X"],  # Sadece ihracat (export)
+            concurrency=3,
+        )
+        all_records.extend(calcite_annual)
+        logger.info(f"Calcite yıllık ihracat: {len(calcite_annual)} kayıt (TR/EG/GR)")
+
+        calcite_monthly = await client.fetch_bulk(
+            frequency="M",
+            reporters=calcite_reporters,
+            partners=[0],  # Dünya toplamı
+            cmd_groups=calcite_cmd,
+            periods=monthly_periods,
+            flows=["X"],
+            concurrency=3,
+        )
+        all_records.extend(calcite_monthly)
+        logger.info(f"Calcite aylık ihracat: {len(calcite_monthly)} kayıt (TR/EG/GR)")
 
     if not all_records:
         logger.warning("Hiç kayıt alınamadı.")

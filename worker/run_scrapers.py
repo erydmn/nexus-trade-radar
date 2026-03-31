@@ -9,12 +9,72 @@ if str(root_dir) not in sys.path:
 import logging
 import httpx
 import asyncio
+from datetime import datetime, timezone
 from core.config import settings
 from worker.models.signal import RawEvent
 from worker.comtrade_service import run_comtrade_pipeline
+from worker.truth_engine import TruthEngine
 from worker.scrapers.advanced_news_scraper import fetch_gdelt_doc, fetch_event_registry, fetch_turkish_rss
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
+# ── Source key mapping ────────────────────────────────────────────────────────
+# Maps RawEvent.source prefixes to TruthEngine source keys for cross-verification
+SOURCE_KEY_MAP = {
+    "GDELT":         "gdelt",
+    "EventRegistry": "newsapi",       # EventRegistry ≈ news aggregator tier
+    "NewsAPI":       "newsapi",
+    "The Guardian":  "newsapi",
+    "Reuters":       "reuters_rss",
+    "AP":            "ap_rss",
+    "BBC":           "bbc_business_rss",
+    "Lloyd's List":  "lloyds_list_rss",
+    "TradeWinds":    "tradewinds_rss",
+    "RSS":           "reuters_rss",    # Generic RSS fallback
+}
+
+
+def _classify_source(source_str: str) -> str:
+    """Map a RawEvent.source string to a TruthEngine source key."""
+    for prefix, key in SOURCE_KEY_MAP.items():
+        if source_str.startswith(prefix):
+            return key
+    return "newsapi"  # conservative default
+
+
+def _raw_event_to_truth_dict(ev: RawEvent) -> dict:
+    """Convert a RawEvent to the dict format TruthEngine expects."""
+    return {
+        "event_id": ev.event_id,
+        "source": ev.source,
+        "title": ev.raw_text[:200],
+        "description": ev.raw_text,
+        "timestamp": ev.timestamp.isoformat(),
+        "mode": "maritime",  # default; refined downstream
+        "severity": "medium",
+        "trust_score": ev.trust_score,
+        "metadata": ev.metadata,
+    }
+
+
+def _truth_dict_to_raw_event(verified: dict) -> RawEvent:
+    """Convert a TruthEngine-verified dict back to a RawEvent for serialization."""
+    return RawEvent(
+        source=verified.get("source", "Unknown"),
+        raw_text=verified.get("description", verified.get("title", "")),
+        timestamp=datetime.fromisoformat(
+            verified["timestamp"].replace("Z", "+00:00")
+        ) if isinstance(verified.get("timestamp"), str) else datetime.now(timezone.utc),
+        trust_score=verified.get("truth_score", 0.70),
+        tags=verified.get("confirmed_by", []),
+        metadata={
+            **verified.get("metadata", {}),
+            "verification_status": verified.get("verification_status", "unverified"),
+            "match_confidence": verified.get("match_confidence", 0.0),
+            "confirmed_by": verified.get("confirmed_by", []),
+        },
+    )
+
 
 def fetch_newsapi():
     if not settings.newsapi_key:
@@ -113,6 +173,7 @@ def fetch_guardian():
     return events
 
 def fetch_and_store_news():
+    # ── Phase 1: Parallel async + sync fetch ──────────────────────────────────
     newsapi_events = fetch_newsapi()
     guardian_events = fetch_guardian()
     
@@ -138,17 +199,42 @@ def fetch_and_store_news():
     if not all_events:
         logging.info("No articles found from any source.")
         return
-        
+
+    # ── Phase 2: TruthEngine cross-verification ──────────────────────────────
+    # Group RawEvents by source key for N-source verification
+    logging.info(f"Running TruthEngine cross-verification on {len(all_events)} events...")
+    
+    source_groups: dict[str, list[dict]] = {}
+    for ev in all_events:
+        src_key = _classify_source(ev.source)
+        truth_dict = _raw_event_to_truth_dict(ev)
+        source_groups.setdefault(src_key, []).append(truth_dict)
+    
+    logging.info(f"Source groups: {', '.join(f'{k}={len(v)}' for k, v in source_groups.items())}")
+    
+    engine = TruthEngine()
+    verified_dicts = engine.verify_events(source_events=source_groups)
+    
+    # Convert verified dicts back to RawEvent for serialization
+    verified_events = [_truth_dict_to_raw_event(vd) for vd in verified_dicts]
+    
+    logging.info(
+        f"TruthEngine: {len(all_events)} raw → {len(verified_events)} verified events "
+        f"(deduplication removed {len(all_events) - len(verified_events)} duplicates)"
+    )
+
+    # ── Phase 3: Save only verified events to data lake ──────────────────────
     output_path = root_dir / "nexus_data_lake.jsonl"
     events_saved = 0
     
     with open(output_path, "a", encoding="utf-8") as f:
-        for event in all_events:
+        for event in verified_events:
             f.write(event.model_dump_json() + "\n")
             events_saved += 1
             
-    logging.info(f"Successfully saved {events_saved} new highly targeted trade events to {output_path.name}")
+    logging.info(f"Successfully saved {events_saved} verified trade events to {output_path.name}")
     
+    # ── Phase 4: Comtrade pipeline ───────────────────────────────────────────
     logging.info("News scraping completed. Handing over to Comtrade Service...")
     asyncio.run(run_comtrade_pipeline())
 
