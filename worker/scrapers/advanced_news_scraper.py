@@ -12,9 +12,19 @@ from time import mktime
 logger = logging.getLogger("nexus.advanced")
 
 async def fetch_gdelt_doc():
+    """
+    [Phase 13] Laser-focused GDELT queries — ONLY Turmet-relevant industrial mineral keywords.
+    Generic terms (supply chain, port strike, trade) removed to eliminate Apple/egg/war noise.
+    """
     url = "https://api.gdeltproject.org/api/v2/doc/doc"
     params = {
-        "query": "(calcite OR 'calcium carbonate' OR mining OR 'industrial minerals' OR 'port strike' OR 'supply chain')",
+        "query": (
+            "(calcite OR \"calcium carbonate\" OR \"industrial minerals\" OR limestone "
+            "OR dolomite OR kaolin OR talc OR \"calcium oxide\" "
+            "OR \"paint raw material\" OR \"cement industry\" "
+            "OR \"kalsit\" OR \"kalsiyum karbonat\" OR \"endüstriyel mineraller\" "
+            "OR \"boya hammadde\" OR \"çimento\")"
+        ),
         "mode": "artlist",
         "maxrecords": 15,
         "format": "json",
@@ -45,6 +55,9 @@ async def fetch_gdelt_doc():
     return events
 
 async def fetch_event_registry():
+    """
+    [Phase 13] Laser-focused EventRegistry queries — mineral/calcite keywords only.
+    """
     if not settings.eventregistry_api_key:
         logger.warning("EventRegistry API key omitted. Skipping.")
         return []
@@ -56,7 +69,12 @@ async def fetch_event_registry():
     cutoff_str = (datetime.now(timezone.utc) - timedelta(days=7)).strftime('%Y-%m-%d')
     
     payload = {
-        "keyword": ["calcite", "paint industry", "coating", "mineral"],
+        "keyword": [
+            "calcite", "calcium carbonate", "industrial minerals",
+            "limestone", "dolomite", "kaolin", "talc",
+            "paint industry", "cement industry",
+            "kalsit", "kalsiyum karbonat"
+        ],
         "keywordOper": "or",
         "lang": ["eng", "tur"],
         "articlesCount": 10,

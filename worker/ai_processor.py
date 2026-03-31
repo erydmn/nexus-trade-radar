@@ -37,6 +37,17 @@ class AIProcessor:
             "NO EXCEPTIONS. Do NOT rationalize indirect connections. "
             "A war between two countries is NOT relevant unless it physically blocks Turmet's export routes.\n\n"
 
+            # ── ANTI-HALLUCINATION RULE ──────────────────────────────────────
+            "ANTI-HALLUCINATION RULE: Do NOT invent or assume connections to Calcite or Mining. "
+            "If the raw news text does NOT LITERALLY contain words related to minerals, mining, "
+            "calcite, calcium carbonate, calcium oxide, dolomite, kaolin, talc, limestone, cement, "
+            "construction materials, paint raw materials, or specific freight logistics for these materials, "
+            "you MUST assign relevance_score=0. "
+            "A general war in the Middle East does NOT automatically mean a Calcite crisis. "
+            "A random tariff on electronics does NOT affect Turmet. "
+            "You are NOT allowed to write 'this could indirectly affect...' — if the text doesn't say it, score=0. "
+            "Do NOT be sycophantic. Do NOT try to make every news relevant. Most news is IRRELEVANT to Turmet.\n\n"
+
             # ── SCORING HIERARCHY ────────────────────────────────────────────
             "SCORING RULES (strict hierarchy):\n"
             "• 90-100: UN Comtrade quantitative data for HS 2520/2526/2507/283650/72/73/25/26/32/38, "

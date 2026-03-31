@@ -167,8 +167,19 @@ def _render_truth_badges(row):
 def _is_comtrade(row) -> bool:
     """Check if signal originates from UN Comtrade data."""
     summary = str(row.get("executive_summary", "")).lower()
+    source_field = str(row.get("source", "")).lower() if row.get("source") else ""
     source_url = str(row.get("source_url", "")).lower()
-    return any(kw in summary for kw in ["comtrade", "hs 28", "hs 25", "hs 72", "ticaret dengesi", "yoy anomali"]) or "comtradeplus" in source_url
+    # Explicit Comtrade / Calcite competitor detection
+    comtrade_keywords = [
+        "comtrade", "hs 28", "hs 25", "hs 72", "ticaret dengesi",
+        "yoy anomali", "mısır kalsit", "kalsit ihracat", "calcite export",
+        "calcium carbonate export", "283650"
+    ]
+    return (
+        any(kw in summary for kw in comtrade_keywords)
+        or "comtrade" in source_field
+        or "comtradeplus" in source_url
+    )
 
 
 def _source_tag(row) -> str:
@@ -258,6 +269,17 @@ else:
                     st.write(f"**Puan: {score}**")
                 with prog_col:
                     st.progress(int(score) / 100.0)
+                
+                # ── [Phase 13] Explicit Comtrade banner ─────────────────────
+                if is_comtrade_signal:
+                    st.info("📊 **MARKET DATA (UN COMTRADE)** — Resmi BM dış ticaret istatistiği")
+                
+                # ── [Phase 13] Prominent truth_score display ─────────────────
+                trust_val = row.get("trust_score")
+                if trust_val is not None and pd.notna(trust_val):
+                    tv = float(trust_val)
+                    pct_str = f"{tv * 100:.0f}%" if tv <= 1.0 else f"{tv:.0f}%"
+                    st.write(f"🛡️ **Truth Score: {pct_str}** | Verification: {row.get('verification_status', 'N/A')}")
                 
                 # Display action block based on score and type
                 insight = row["actionable_insight"]
