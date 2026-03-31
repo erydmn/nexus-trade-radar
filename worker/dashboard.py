@@ -71,7 +71,7 @@ st.divider()
 st.sidebar.header("🔍 Filtreleme Seçenekleri")
 min_relevance_score = st.sidebar.slider(
     "Minimum Etki Puanı (Relevance Score)", 
-    min_value=0, max_value=100, value=50, step=1
+    min_value=70, max_value=100, value=70, step=1
 )
 
 selected_sentiments = st.sidebar.multiselect(
@@ -87,7 +87,12 @@ selected_risk = st.sidebar.multiselect("🛡️ Risk Kategorisi", options=all_ri
 if df.empty:
     st.info("Sistemde henüz çözümlenmiş bir sinyal bulunmuyor.")
 else:
-    # Filter
+    # ── [Phase 12.1] Hard floor: NEVER render signals below 70 ─────────────
+    # This is a strict mathematical filter independent of the sidebar slider.
+    # Llama-3.1 scores garbage news 0-40; they must never reach the UI.
+    df = df[df["relevance_score"] >= 70].copy()
+    
+    # Filter (sidebar controls — already bounded by the hard floor above)
     filtered_df = df[
         (df["relevance_score"] >= min_relevance_score) & 
         (df["sentiment"].isin(selected_sentiments)) &

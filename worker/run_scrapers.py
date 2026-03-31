@@ -173,9 +173,10 @@ def fetch_guardian():
     return events
 
 def fetch_and_store_news():
-    # ── Phase 1: Parallel async + sync fetch ──────────────────────────────────
-    newsapi_events = fetch_newsapi()
-    guardian_events = fetch_guardian()
+    # ── Phase 1: Async fetch — ONLY advanced scrapers ─────────────────────────
+    # [Phase 12.1 Kill Switch] Legacy scrapers (NewsAPI, Guardian) disabled.
+    # They were pulling stale 2023/2024 news that polluted the data lake.
+    # Active sources: GDELT Doc API, EventRegistry, Turkish RSS feeds.
     
     loop = asyncio.get_event_loop()
     if loop.is_running():
@@ -195,7 +196,7 @@ def fetch_and_store_news():
             fetch_turkish_rss()
         ))
     
-    all_events = newsapi_events + guardian_events + gdelt_events + event_registry_events + rss_events
+    all_events = gdelt_events + event_registry_events + rss_events
     if not all_events:
         logging.info("No articles found from any source.")
         return
