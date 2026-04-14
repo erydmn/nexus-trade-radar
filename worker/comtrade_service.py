@@ -607,23 +607,18 @@ async def run_comtrade_pipeline() -> list[RawEvent]:
     )
 
     TARGETS = [
-        {"cmd": "72", "flow": "X", "label": "Demir ve Çelik (Fasıl 72)"},
-        {"cmd": "73", "flow": "X", "label": "Demir/Çelik Eşya (Fasıl 73)"},
-        {"cmd": "25", "flow": "X", "label": "Tuz, Kükürt, Toprak, Taş ve Alçı (Fasıl 25)"},
-        {"cmd": "26", "flow": "X", "label": "Metal Cevherleri ve Cüruf (Fasıl 26)"},
-        {"cmd": "32", "flow": "X", "label": "Boya, Vernik ve Macunlar (Fasıl 32)"},
-        {"cmd": "38", "flow": "X", "label": "Muhtelif Kimyasal Maddeler (Fasıl 38)"}
+        {"cmd": "283650", "flow": "X", "label": "Kalsiyum Karbonat (Calcite) - Turmet Core Product"}
     ]
     
     # Update global HS_CODES with our precise labels
     for t in TARGETS:
         HS_CODES[t["cmd"]] = t["label"]
 
-    cmd_groups = [[t["cmd"] for t in TARGETS]]
+    cmd_groups = [["283650"]]
 
     # --- Sorgu parametreleri -----------------------------------------------
-    # Yıllık: 3 yıl trend analizi için
-    annual_periods = ["2021", "2022", "2023"]
+    # Yıllık: Recent 3 years only (dropped 2021)
+    annual_periods = ["2022", "2023", "2024"]
     # Aylık: son 12 ay (2024 dahil)
     monthly_periods = [f"2024{m:02d}" for m in range(1, 13)]
 

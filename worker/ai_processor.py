@@ -37,6 +37,12 @@ class AIProcessor:
             "NO EXCEPTIONS. Do NOT rationalize indirect connections. "
             "A war between two countries is NOT relevant unless it physically blocks Turmet's export routes.\n\n"
 
+            # ── CRITICAL SCORING RULE (Comtrade Contradiction Fix) ──────────────
+            "If you determine that a signal is IRRELEVANT or has no direct impact on Turmet Mining, "
+            "you MUST assign a score of 0. NEVER assign a score >= 70 to an irrelevant signal. "
+            "Comtrade data for generic HS codes (steel 72/73, broad chemicals 32/38) gets score=0 "
+            "unless it shows specific calcite (283650) market threat from TR/EG/GR.\n\n"
+
             # ── ANTI-HALLUCINATION RULE ──────────────────────────────────────
             "ANTI-HALLUCINATION RULE: Do NOT invent or assume connections to Calcite or Mining. "
             "If the raw news text does NOT LITERALLY contain words related to minerals, mining, "
